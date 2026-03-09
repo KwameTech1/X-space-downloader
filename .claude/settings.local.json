@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(py:*)",
+      "Bash(where:*)",
+      "Read(//c/Users/Edmond kwame Kumah/AppData/Local/Programs//**)",
+      "Read(//c/Users/Edmond kwame Kumah/AppData/Roaming//**)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(ls /c/Python*)",
+      "Read(//c/Users/**)",
+      "Bash(cmd.exe:*)",
+      "Bash(TaskOutput:*)",
+      "Bash(\"/c/Users/Edmond kwame Kumah/AppData/Local/Programs/pgAdmin 4/python/python.exe\":*)",
+      "Bash(\"$PYTHON\":*)",
+      "Bash(\"$VENV_PIP\" install:*)",
+      "Bash(\"$VENV_PY\":*)",
+      "Bash(\"$PGPY\":*)",
+      "Bash(\"$PGSCRIPTS/pytest.exe\":*)"
+    ]
+  }
+}
