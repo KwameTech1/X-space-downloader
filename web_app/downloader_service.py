@@ -10,6 +10,7 @@ route drains that queue and forwards every message to the browser.
 """
 
 import asyncio
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -41,6 +42,9 @@ class JobStatus(str, Enum):
 class DownloadJob:
     job_id: str
     url: str
+    transcribe: bool = False
+    transcribe_model: str = "small"
+    language: Optional[str] = None
     status: JobStatus = JobStatus.PENDING
     result_file: Optional[Path] = None
     error: Optional[str] = None
@@ -55,9 +59,21 @@ class JobManager:
     def __init__(self) -> None:
         self._jobs: Dict[str, DownloadJob] = {}
 
-    def create(self, url: str) -> DownloadJob:
+    def create(
+        self,
+        url: str,
+        transcribe: bool = False,
+        transcribe_model: str = "small",
+        language: Optional[str] = None,
+    ) -> DownloadJob:
         job_id = str(uuid.uuid4())[:8]
-        job = DownloadJob(job_id=job_id, url=url)
+        job = DownloadJob(
+            job_id=job_id,
+            url=url,
+            transcribe=transcribe,
+            transcribe_model=transcribe_model,
+            language=language,
+        )
         self._jobs[job_id] = job
         return job
 
@@ -140,6 +156,64 @@ async def run_download(job: DownloadJob) -> None:
             "size_mb": size_mb,
             "url": f"/downloads/{job.job_id}/{output_path.name}",
         })
+
+        # ── 6–8. Transcription pipeline (optional) ────────────────────────────
+        if job.transcribe:
+            from transcription.transcriber import transcribe_audio
+            from transcription.transcript_cleaner import clean_transcript
+            from analysis.summarizer import summarize_transcript
+
+            await job.emit("log", f"Transcribing with Whisper '{job.transcribe_model}'…")
+            await job.emit("transcribe_start", None)
+            try:
+                transcript_path: Path = await loop.run_in_executor(
+                    None,
+                    lambda: transcribe_audio(
+                        output_path,
+                        model_size=job.transcribe_model,
+                        language=job.language,
+                    ),
+                )
+                await job.emit("log", f"Transcript ready: {transcript_path.name}")
+                await job.emit("transcript_done", {
+                    "filename": transcript_path.name,
+                    "url": f"/downloads/{job.job_id}/{transcript_path.name}",
+                })
+            except Exception as exc:
+                await job.emit("log", f"Transcription failed: {exc}")
+                return  # can't clean/summarise without a transcript
+
+            has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+            if not has_key:
+                await job.emit("log", "Set ANTHROPIC_API_KEY to enable cleaning & summary.")
+                return
+
+            await job.emit("log", "Cleaning transcript…")
+            try:
+                clean_path: Path = await loop.run_in_executor(
+                    None, lambda: clean_transcript(transcript_path)
+                )
+                await job.emit("log", f"Clean transcript ready: {clean_path.name}")
+                await job.emit("clean_done", {
+                    "filename": clean_path.name,
+                    "url": f"/downloads/{job.job_id}/{clean_path.name}",
+                })
+            except Exception as exc:
+                await job.emit("log", f"Transcript cleaning failed: {exc}")
+                clean_path = transcript_path  # fall back to raw transcript
+
+            await job.emit("log", "Generating summary…")
+            try:
+                summary_path: Path = await loop.run_in_executor(
+                    None, lambda: summarize_transcript(clean_path, metadata=metadata)
+                )
+                await job.emit("log", f"Summary ready: {summary_path.name}")
+                await job.emit("summary_done", {
+                    "filename": summary_path.name,
+                    "url": f"/downloads/{job.job_id}/{summary_path.name}",
+                })
+            except Exception as exc:
+                await job.emit("log", f"Summarization failed: {exc}")
 
     except Exception as exc:
         job.status = JobStatus.ERROR

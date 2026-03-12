@@ -23,7 +23,12 @@ async def start_download(payload: dict) -> dict:
     url = (payload.get("url") or "").strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
-    job = job_manager.create(url)
+    job = job_manager.create(
+        url=url,
+        transcribe=bool(payload.get("transcribe", False)),
+        transcribe_model=str(payload.get("transcribe_model", "small")),
+        language=payload.get("language") or None,
+    )
     asyncio.create_task(run_download(job))
     return {"job_id": job.job_id}
 
@@ -38,16 +43,28 @@ async def ws_progress(websocket: WebSocket, job_id: str) -> None:
         await websocket.close()
         return
 
+    # Keep the socket alive until the full pipeline (including optional
+    # transcription) is complete.  A summary_done or clean_done event
+    # may arrive long after the initial done event.
+    terminal_events = {"error"}
+    if not job.transcribe:
+        terminal_events.add("done")
+
     try:
         while True:
             try:
-                msg = await asyncio.wait_for(job.queue.get(), timeout=120)
+                msg = await asyncio.wait_for(job.queue.get(), timeout=300)
             except asyncio.TimeoutError:
                 await websocket.send_json({"type": "ping"})
                 continue
 
             await websocket.send_json(msg)
-            if msg["type"] in ("done", "error"):
+            # Close after summary (or clean if summary failed), or on error
+            if msg["type"] in terminal_events:
+                break
+            if msg["type"] == "summary_done":
+                break
+            if msg["type"] == "transcript_done" and not job.transcribe:
                 break
     except WebSocketDisconnect:
         pass

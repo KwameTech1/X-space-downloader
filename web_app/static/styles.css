@@ -198,13 +198,79 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .log p.error { color: var(--danger); }
 .log p.ok    { color: var(--success); }
 
-/* ── Done section ──────────────────────────────────────────────────────────── */
-#done-section {
+/* ── Transcription options ─────────────────────────────────────────────────── */
+.options-row {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 0;
+}
+.toggle-label input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+.transcribe-opts {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.select-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+}
+select:focus { border-color: var(--accent); }
+
+/* ── Done section ──────────────────────────────────────────────────────────── */
+#done-section {
   margin-top: 0.875rem;
 }
+.output-files {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.file-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  min-width: 80px;
+  text-align: center;
+}
+.file-tag.audio    { background: #1d3a5e; color: var(--accent); }
+.file-tag.transcript { background: #1a3328; color: var(--success); }
+.file-tag.clean    { background: #2d2a14; color: var(--warning); }
+.file-tag.summary  { background: #2d1a2e; color: #c084fc; }
 .file-meta { font-size: 0.82rem; color: var(--text-muted); }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */

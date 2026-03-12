@@ -31,6 +31,25 @@
           >
           <button id="download-btn" onclick="startDownload()">Download</button>
         </div>
+
+        <!-- Transcription options -->
+        <div class="options-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="transcribe-chk">
+            <span class="toggle-text">Transcribe audio</span>
+          </label>
+          <div id="transcribe-opts" class="transcribe-opts hidden">
+            <label class="select-label" for="model-select">Model</label>
+            <select id="model-select">
+              <option value="tiny">tiny — fastest</option>
+              <option value="base">base</option>
+              <option value="small" selected>small — recommended</option>
+              <option value="medium">medium — accurate</option>
+              <option value="large-v3">large-v3 — best</option>
+            </select>
+          </div>
+        </div>
+
         <p id="error-msg" class="error hidden"></p>
       </div>
 
@@ -70,20 +89,16 @@
         <!-- Log stream -->
         <div class="log" id="log"></div>
 
-        <!-- Download button — revealed on completion -->
+        <!-- Output files — revealed progressively as each step completes -->
         <div id="done-section" class="hidden">
-          <a id="file-link" href="#" class="btn-success" download>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Audio
-          </a>
-          <span id="file-meta" class="file-meta"></span>
+          <div class="output-files" id="output-files"></div>
         </div>
 
       </div>
     </main>
 
     <footer>
-      <p>Downloads Twitter/X Space replays as MP3 — uses the existing CLI engine</p>
+      <p>Downloads Twitter/X Space replays as MP3 · optional Whisper transcription + Claude summary</p>
     </footer>
 
   </div>
