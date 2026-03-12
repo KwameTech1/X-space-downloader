@@ -11,6 +11,7 @@ Built with Typer (argument parsing) and Rich (terminal UI).
 
 import asyncio
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -148,6 +149,23 @@ def download(
         "--temp-dir",
         help="Directory for temporary segment files (default: beside output file).",
     ),
+    transcribe: bool = typer.Option(
+        False,
+        "--transcribe",
+        "-t",
+        help="Transcribe the audio after downloading (requires faster-whisper).",
+    ),
+    transcribe_model: str = typer.Option(
+        "small",
+        "--transcribe-model",
+        help="Whisper model size: tiny | base | small | medium | large-v2 | large-v3",
+    ),
+    language: Optional[str] = typer.Option(
+        None,
+        "--language",
+        "-l",
+        help="Audio language ISO-639-1 code (e.g. en). Auto-detected if not set.",
+    ),
 ) -> None:
     """Download a Twitter/X Space as an audio file.
 
@@ -169,6 +187,9 @@ def download(
                 concurrency=concurrency,
                 keep_segments=keep_segments,
                 temp_dir=temp_dir,
+                transcribe=transcribe,
+                transcribe_model=transcribe_model,
+                language=language,
             )
         )
     except SpaceDownloaderError as exc:
@@ -188,6 +209,9 @@ async def _run_download(
     concurrency: int,
     keep_segments: bool,
     temp_dir: Optional[Path],
+    transcribe: bool = False,
+    transcribe_model: str = "small",
+    language: Optional[str] = None,
 ) -> None:
     _print_banner()
 
@@ -275,15 +299,65 @@ async def _run_download(
 
     console.print("[green]✓[/green]  Metadata embedded\n")
 
+    # ── 9. Transcription pipeline (optional) ──────────────────────────────────
+    transcript_path = None
+    clean_path = None
+    summary_path = None
+
+    if transcribe:
+        from transcription.transcriber import transcribe_audio
+        from transcription.transcript_cleaner import clean_transcript
+        from analysis.summarizer import summarize_transcript
+
+        console.print()
+        with console.status(
+            f"[bold green]Transcribing with Whisper '{transcribe_model}'… "
+            f"(this takes a few minutes)[/bold green]"
+        ):
+            transcript_path = transcribe_audio(
+                final, model_size=transcribe_model, language=language
+            )
+        console.print(f"[green]✓[/green]  Transcript: [bold]{transcript_path.name}[/bold]")
+
+        has_api_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+        if has_api_key:
+            with console.status("[bold green]Cleaning transcript…"):
+                try:
+                    clean_path = clean_transcript(transcript_path)
+                    console.print(f"[green]✓[/green]  Clean transcript: [bold]{clean_path.name}[/bold]")
+                except Exception as exc:
+                    console.print(f"[yellow]⚠[/yellow]  Transcript cleaning skipped: {exc}")
+                    clean_path = transcript_path
+
+            with console.status("[bold green]Generating summary…"):
+                try:
+                    summary_path = summarize_transcript(
+                        clean_path or transcript_path, metadata=metadata
+                    )
+                    console.print(f"[green]✓[/green]  Summary: [bold]{summary_path.name}[/bold]")
+                except Exception as exc:
+                    console.print(f"[yellow]⚠[/yellow]  Summarization skipped: {exc}")
+        else:
+            console.print(
+                "[yellow]⚠[/yellow]  Set [bold]ANTHROPIC_API_KEY[/bold] to enable "
+                "transcript cleaning and summarization."
+            )
+
     # ── Summary ───────────────────────────────────────────────────────────────
     size_mb = final.stat().st_size / 1_000_000
+    summary_lines = (
+        f"[bold green]Done![/bold green]\n"
+        f"[dim]File :[/dim] [cyan]{final}[/cyan]\n"
+        f"[dim]Size :[/dim] {size_mb:.1f} MB"
+    )
+    if transcript_path:
+        summary_lines += f"\n[dim]Transcript:[/dim] [cyan]{transcript_path.name}[/cyan]"
+    if clean_path and clean_path != transcript_path:
+        summary_lines += f"\n[dim]Clean    :[/dim] [cyan]{clean_path.name}[/cyan]"
+    if summary_path:
+        summary_lines += f"\n[dim]Summary  :[/dim] [cyan]{summary_path.name}[/cyan]"
     console.print(
-        Panel.fit(
-            f"[bold green]Done![/bold green]\n"
-            f"[dim]File :[/dim] [cyan]{final}[/cyan]\n"
-            f"[dim]Size :[/dim] {size_mb:.1f} MB",
-            border_style="green",
-        )
+        Panel.fit(summary_lines, border_style="green")
     )
 
 
