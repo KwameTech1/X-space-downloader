@@ -78,9 +78,32 @@ def merge_segments(
 
     ffmpeg = check_ffmpeg()
 
-    valid = [s for s in segments if s.local_path and s.local_path.exists()]
-    if not valid:
+    candidate = [s for s in segments if s.local_path and s.local_path.exists()]
+    if not candidate:
         raise MergeError("No valid segment files to merge")
+
+    # Pre-validate each segment — skip any that ffprobe rejects.
+    valid = []
+    skipped = 0
+    for seg in candidate:
+        result = subprocess.run(
+            [ffmpeg, "-v", "error", "-i", str(seg.local_path), "-f", "null", "-"],
+            capture_output=True,
+        )
+        if result.returncode == 0:
+            valid.append(seg)
+        else:
+            skipped += 1
+            logger.warning(
+                "Skipping segment %d (unreadable by ffmpeg): %s",
+                seg.index,
+                seg.local_path.name,
+            )
+
+    if skipped:
+        logger.warning("Skipped %d/%d unreadable segments", skipped, len(candidate))
+    if not valid:
+        raise MergeError("No valid segment files passed ffmpeg validation")
 
     logger.info("Merging %d segments → .%s …", len(valid), output_format)
 

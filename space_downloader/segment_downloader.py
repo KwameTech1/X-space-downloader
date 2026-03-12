@@ -44,12 +44,17 @@ async def _download_one(
     """
     local_path = output_dir / url_to_filename(segment.url)
 
-    # Resume: skip segments already on disk.
+    # Resume: skip segments already on disk with valid content.
     if local_path.exists() and local_path.stat().st_size > 0:
-        segment.local_path = local_path
-        segment.downloaded = True
-        progress.advance(task_id)
-        return True
+        data = local_path.read_bytes()
+        if data[:3] == b"ID3" or (len(data) > 1 and data[0] == 0xFF and (data[1] & 0xF0) == 0xF0):
+            segment.local_path = local_path
+            segment.downloaded = True
+            progress.advance(task_id)
+            return True
+        # File exists but is corrupt — delete and re-download.
+        logger.warning("Segment %d: cached file is corrupt, re-downloading…", segment.index)
+        local_path.unlink()
 
     async with semaphore:
         for attempt in range(MAX_RETRIES):
@@ -62,6 +67,16 @@ async def _download_one(
                             status=resp.status,
                         )
                     data = await resp.read()
+
+                # Sanity-check: Twitter Space segments start with ID3 or ADTS sync.
+                if len(data) < 4 or not (
+                    data[:3] == b"ID3"
+                    or (data[0] == 0xFF and (data[1] & 0xF0) == 0xF0)
+                ):
+                    raise ValueError(
+                        f"Segment {segment.index} response is not valid AAC "
+                        f"(got {data[:4].hex()!r})"
+                    )
 
                 local_path.write_bytes(data)
                 segment.local_path = local_path
