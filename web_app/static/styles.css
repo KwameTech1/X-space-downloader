@@ -1,0 +1,219 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg:          #0d1117;
+  --surface:     #161b22;
+  --surface2:    #1c2128;
+  --border:      #30363d;
+  --accent:      #1d9bf0;
+  --accent-h:    #1a8cd8;
+  --success:     #3fb950;
+  --warning:     #d29922;
+  --danger:      #f85149;
+  --text:        #e6edf3;
+  --text-muted:  #8b949e;
+  --font-sans:   -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:   "SF Mono", "Fira Code", Consolas, "Courier New", monospace;
+  --radius:      10px;
+  --shadow:      0 0 0 1px var(--border);
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+html { font-size: 15px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2.5rem 1rem 4rem;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+header { text-align: center; padding-bottom: 1rem; }
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── Input area ────────────────────────────────────────────────────────────── */
+label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+.input-row { display: flex; gap: 0.5rem; }
+
+input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.875rem;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type="text"]:focus { border-color: var(--accent); }
+input[type="text"]::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+button, .btn-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.125rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+}
+button:hover:not(:disabled) { background: var(--accent-h); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-success {
+  background: var(--success);
+  color: #fff;
+}
+.btn-success:hover { opacity: 0.88; }
+
+/* ── Error message ─────────────────────────────────────────────────────────── */
+.error {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+/* ── Metadata grid ─────────────────────────────────────────────────────────── */
+.metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.span-2 { grid-column: span 2; }
+
+.meta-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.meta-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.meta-value { font-size: 0.9rem; font-weight: 500; }
+
+.divider { height: 1px; background: var(--border); margin-bottom: 1rem; }
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+.progress-pct { font-weight: 600; }
+
+.progress-track {
+  height: 5px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.875rem;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.5s ease, background 0.3s;
+}
+.progress-fill.done { background: var(--success); }
+
+/* ── Log ───────────────────────────────────────────────────────────────────── */
+.log {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-height: 160px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.log:empty { display: none; }
+.log p { margin: 0; }
+.log p.warn  { color: var(--warning); }
+.log p.error { color: var(--danger); }
+.log p.ok    { color: var(--success); }
+
+/* ── Done section ──────────────────────────────────────────────────────────── */
+#done-section {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-top: 0.875rem;
+}
+.file-meta { font-size: 0.82rem; color: var(--text-muted); }
+
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* ── Utility ───────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }

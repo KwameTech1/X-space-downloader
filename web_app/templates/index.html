@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Spaces Downloader</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <span>Spaces Downloader</span>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- ── Input card ── -->
+      <div class="card" id="input-card">
+        <label for="url-input">Space URL</label>
+        <div class="input-row">
+          <input
+            type="text"
+            id="url-input"
+            placeholder="https://x.com/i/spaces/…"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="download-btn" onclick="startDownload()">Download</button>
+        </div>
+        <p id="error-msg" class="error hidden"></p>
+      </div>
+
+      <!-- ── Progress card (shown once download begins) ── -->
+      <div class="card hidden" id="progress-card">
+
+        <!-- Metadata -->
+        <div id="metadata-section" class="hidden">
+          <div class="metadata-grid">
+            <div class="meta-item span-2">
+              <span class="meta-label">Title</span>
+              <span class="meta-value" id="meta-title">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Host</span>
+              <span class="meta-value" id="meta-host">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Duration</span>
+              <span class="meta-value" id="meta-duration">—</span>
+            </div>
+          </div>
+          <div class="divider"></div>
+        </div>
+
+        <!-- Progress bar -->
+        <div id="progress-section">
+          <div class="progress-header">
+            <span id="progress-label">Starting…</span>
+            <span id="progress-pct" class="progress-pct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Log stream -->
+        <div class="log" id="log"></div>
+
+        <!-- Download button — revealed on completion -->
+        <div id="done-section" class="hidden">
+          <a id="file-link" href="#" class="btn-success" download>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Audio
+          </a>
+          <span id="file-meta" class="file-meta"></span>
+        </div>
+
+      </div>
+    </main>
+
+    <footer>
+      <p>Downloads Twitter/X Space replays as MP3 — uses the existing CLI engine</p>
+    </footer>
+
+  </div>
+  <script src="/static/script.js"></script>
+</body>
+</html>
